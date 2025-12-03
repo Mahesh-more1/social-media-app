@@ -1,0 +1,58 @@
+📁 frontend
+⏱️  Generated in 51ms
+📊 73 items processed
+──────────────────────────────────────────────────
+├── 📁 public
+│    to may images
+├── 📁 src
+│   ├── 📁 assets
+│   ├── 📁 components
+│   │   ├── 📄 AddToAlbumModal.jsx
+│   │   ├── 📄 CreateAlbumModal.jsx
+│   │   ├── 📄 Footer.jsx
+│   │   ├── 📄 Header.jsx
+│   │   ├── 📄 Logo.jsx
+│   │   ├── 📄 Modal.jsx
+│   │   ├── 📄 Post.jsx
+│   │   ├── 📄 Sidebar.jsx
+│   │   ├── 📄 UserCard.jsx
+│   │   └── 📄 x.jsx
+│   ├── 📁 pages
+│   │   ├── 📄 AlbumPage.jsx
+│   │   ├── 📄 Auth.jsx
+│   │   ├── 📄 Bookmarks.jsx
+│   │   ├── 📄 Communities.jsx
+│   │   ├── 📄 CreatePost.jsx
+│   │   ├── 📄 EditPost.jsx
+│   │   ├── 📄 EditProfile.jsx
+│   │   ├── 📄 Events.jsx
+│   │   ├── 📄 Explore.jsx
+│   │   ├── 📄 Friends.jsx
+│   │   ├── 📄 Home.jsx
+│   │   ├── 📄 Messages.jsx
+│   │   ├── 📄 Notifications.jsx
+│   │   ├── 📄 Photo.jsx
+│   │   ├── 📄 Profile.jsx
+│   │   └── 📄 SearchPage.jsx
+│   ├── 📁 services
+│   │   ├── 🟨 albumService.js
+│   │   ├── 🟨 bookmarkServices.js
+│   │   ├── 🟨 messageServices.js
+│   │   ├── 🟨 notificationServices.js
+│   │   ├── 🟨 postServices.js
+│   │   └── 🟨 userServices.js
+│   ├── 📁 store
+│   │   ├── 🟨 actionTypes.js
+│   │   ├── 📄 SocialMediaContext.jsx
+│   │   └── 🟨 socialMediaReducer.js
+│   ├── 📁 utils
+│   │   └── 📄 dateTimes.jsx
+│   ├── 🎨 App.css
+│   ├── 📄 App.jsx
+│   ├── 🎨 index.css
+│   └── 📄 main.jsx
+├── 🟨 eslint.config.js
+├── 🌐 index.html
+├── 📋 package-lock.json
+├── 📋 package.json
+└── 🟨 vite.config.js

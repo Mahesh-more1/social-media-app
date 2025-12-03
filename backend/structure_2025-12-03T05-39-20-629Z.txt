@@ -1,0 +1,39 @@
+📁 backend
+⏱️  Generated in 115ms
+📊 1199 items processed
+──────────────────────────────────────────────────
+├── 📁 config
+│   └── 🟨 multerConfig.js
+├── 📁 controllers
+│   ├── 🟨 albumController.js
+│   ├── 🟨 bookmarkController.js
+│   ├── 🟨 errorController.js
+│   ├── 🟨 messageController.js
+│   ├── 🟨 notificationController.js
+│   ├── 🟨 postController.js
+│   └── 🟨 userController.js
+├── 📁 middlewares
+│   └── 🟨 authMiddleware.js
+├── 📁 models
+│   ├── 🟨 Album.js
+│   ├── 🟨 Message.js
+│   ├── 🟨 Notification.js
+│   ├── 🟨 Post.js
+│   └── 🟨 User.js
+├── 📁 routes
+│   ├── 🟨 albumRoutes.js
+│   ├── 🟨 bookmarkRoutes.js
+│   ├── 🟨 messageRoutes.js
+│   ├── 🟨 notificationRoutes.js
+│   ├── 🟨 postRoutes.js
+│   └── 🟨 userRoutes.js
+├── 📁 uploads
+│   to may user and post images 1000+
+├── 📁 utils
+│   ├── 🟨 jwtUtils.js
+│   └── 🟨 pathUtils.js
+├── 🟨 albumRoutes.js
+├── 🟨 app.js
+├── 📋 nodemon.json
+├── 📋 package-lock.json
+└── 📋 package.json
