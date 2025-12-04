@@ -1,6 +1,6 @@
 import { mapServerItemToLocalItem } from "./postServices";
 
-const API_URL = "http://localhost:3000";
+import { API_URL } from "../config";
 
 // ✅ Add bookmark
 export const addBookmarkToServer = async (postId) => {

@@ -11,11 +11,10 @@ import Messages from "./pages/Messages.jsx";
 import Notifications from "./pages/Notifications.jsx";
 import Profile from "./pages/Profile.jsx";
 import Bookmarks from "./pages/Bookmarks.jsx";
-import Friends from "./pages/Friends.jsx";
 import Photo from "./pages/Photo.jsx";
 import Communities from "./pages/Communities.jsx";
+
 import EditPost from "./pages/EditPost.jsx";
-import Events from "./pages/Events.jsx";
 import EditProfile from "./pages/EditProfile.jsx";
 import SearchPage from "./pages/SearchPage.jsx";
 import Auth from "./pages/Auth.jsx";
@@ -59,21 +58,14 @@ const router = createBrowserRouter([
         element: <Bookmarks />,
       },
       {
-        path: "/friends",
-        element: <Friends />,
-      },
-      {
         path: "/photos",
         element: <Photo />,
-      },
-      {
-        path: "/events",
-        element: <Events />,
       },
       {
         path: "/communities",
         element: <Communities />,
       },
+
       {
         path: "post/:postId/edit",
         element: <EditPost />,

@@ -18,7 +18,10 @@ const postRoutes = express.Router();
 postRoutes.post(
   "/posts",
   authMiddleware,
-  upload.array("photos", 10),
+  upload.fields([
+    { name: "photos", maxCount: 10 },
+    { name: "video", maxCount: 1 },
+  ]),
   createPost
 );
 postRoutes.patch("/posts/:postId", authMiddleware, editPost);

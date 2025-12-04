@@ -1,23 +1,21 @@
-import React, { use, useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { getTimeAgo } from "../utils/dateTimes";
-import { MdOutlineDeleteOutline, MdSave } from "react-icons/md";
+import { MdOutlineDeleteOutline } from "react-icons/md";
 import {
   FaRegHeart,
   FaRegComment,
-  FaShare,
   FaHeart,
-  FaSave,
-  FaRegSave,
-  FaBookmark,
   FaRegBookmark,
+  FaBookmark,
+  FaImages,
+  FaPlay,
+  FaPause,
 } from "react-icons/fa";
-import { FiBookmark, FiEdit, FiTrash2 } from "react-icons/fi";
+import { FiEdit } from "react-icons/fi";
 import { useSocialMedia } from "../store/SocialMediaContext";
 import {
   DELETE_POST,
-  EDIT_POST,
   ADD_COMMENT,
-  DELETE_COMMENT,
   TOGGLE_LIKE,
   TOGGLE_SAVE,
   SET_SEARCH_QUERY,
@@ -37,11 +35,10 @@ import {
   removeBookmarkFromServer,
 } from "../services/bookmarkServices";
 import AddToAlbumModal from "./AddToAlbumModal";
-import { FaImages } from "react-icons/fa";
 
-function Post({ post }) {
+// ✅ 1. Accept hideAddToAlbum prop (defaults to false)
+function Post({ post, hideAddToAlbum = false, onDelete }) {
   const { state, dispatch } = useSocialMedia();
-  // const posts = state.posts;
   const [postContent, setPostContent] = useState("");
   const [postTitle, setPostTitle] = useState("");
   const [postTags, setPostTags] = useState("");
@@ -49,7 +46,19 @@ function Post({ post }) {
   const [text, setText] = useState("");
   const [isAddToAlbumModalOpen, setAddToAlbumModalOpen] = useState(false);
 
-  const isLike = post.likedBy.includes(state.currentUser?.id);
+  // ✅ 2. FIX BROKEN LIKES: Use local state for immediate UI updates
+  // This ensures it works on the Album page where global state might not trigger a re-render
+  const [localLikedBy, setLocalLikedBy] = useState(post.likedBy || []);
+  const [localLikes, setLocalLikes] = useState(post.likes || 0);
+
+  // Sync local state if the prop changes (e.g. via global refresh)
+  useEffect(() => {
+    setLocalLikedBy(post.likedBy || []);
+    setLocalLikes(post.likes || 0);
+  }, [post.likedBy, post.likes]);
+
+  const isLike = localLikedBy.includes(state.currentUser?.id);
+
   const likedCommentIds = post.comments
     .filter((comment) =>
       comment.likedBy.some(
@@ -62,9 +71,23 @@ function Post({ post }) {
 
   const [currentImgIndex, setCurrentImgIndex] = useState(0);
 
+  // Video Player Logic
+  const videoRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const togglePlay = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
   const handleDeletePost = async (postId) => {
-    console.log("🔴 Deleting post with ID:", postId);
-    console.log("🔴 Type:", typeof postId);
+    if (!window.confirm("Are you sure you want to delete this post?")) return;
 
     const postToDeleteId = await deletePostFromServer(postId);
 
@@ -72,8 +95,9 @@ function Post({ post }) {
       type: DELETE_POST,
       payload: postToDeleteId,
     });
-
-    console.log("🔴 Dispatched DELETE_POST with payload:", postId);
+    if (onDelete) {
+      onDelete(postId);
+    }
   };
 
   const handleAddComment = async (postId) => {
@@ -92,6 +116,7 @@ function Post({ post }) {
       console.log(error);
     }
   };
+
   const handleDeleteComment = async (postId, commentId) => {
     try {
       await deleteCommentFromTheServer(postId, commentId);
@@ -123,7 +148,6 @@ function Post({ post }) {
           userId: state.currentUser?.id,
         },
       });
-      console.log("✅ Like toggled:", response);
     } catch (error) {
       console.error("❌ Like comment FAILED:", error);
       alert("Failed to like comment: " + error.message);
@@ -139,8 +163,24 @@ function Post({ post }) {
   };
 
   const toggleLike = async (postId) => {
+    if (!state.currentUser) return alert("Please login to like");
+
+    // ✅ 3. Optimistic UI Update (Updates immediately before server responds)
+    const userId = state.currentUser.id;
+    const currentlyLiked = isLike;
+
+    if (currentlyLiked) {
+      setLocalLikedBy((prev) => prev.filter((id) => id !== userId));
+      setLocalLikes((prev) => prev - 1);
+    } else {
+      setLocalLikedBy((prev) => [...prev, userId]);
+      setLocalLikes((prev) => prev + 1);
+    }
+
     try {
-      const response = await toggleLikePost(postId, isLike);
+      const response = await toggleLikePost(postId, currentlyLiked);
+
+      // Dispatch to update global store (for other pages)
       dispatch({
         type: TOGGLE_LIKE,
         payload: {
@@ -148,9 +188,11 @@ function Post({ post }) {
           userId: state.currentUser?.id,
         },
       });
-      console.log("✅ Like toggled:", response);
     } catch (error) {
       console.error("❌ Like failed:", error);
+      // Revert on error
+      setLocalLikedBy(post.likedBy);
+      setLocalLikes(post.likes);
       alert(error.message);
     }
   };
@@ -158,19 +200,12 @@ function Post({ post }) {
   const toggleSave = async (postId) => {
     try {
       const isBookmarked = state.bookmarks.includes(postId);
-
-      console.log("🔖 Toggle bookmark:", { postId, isBookmarked });
-
-      // ✅ CALL BACKEND API FIRST!
       if (isBookmarked) {
         await removeBookmarkFromServer(postId);
-        console.log("✅ Removed from server");
       } else {
         await addBookmarkToServer(postId);
-        console.log("✅ Added to server");
       }
 
-      // ✅ THEN update local state
       dispatch({
         type: TOGGLE_SAVE,
         payload: { postId },
@@ -187,11 +222,17 @@ function Post({ post }) {
 
   const authorUser = getUserById(post.authorId);
   const authorProfile = authorUser?.profilePicture;
-  const top3LikeUserId = post.likedBy.slice(0, 3);
-  const top3LikeUser = top3LikeUserId
-    .map((userId) => getUserById(userId))
-    .filter((user) => user);
-  const firstLiker = getUserById(post.likedBy[0]);
+
+  let allLikers = localLikedBy.map((id) => getUserById(id)).filter(Boolean);
+
+  if (isLike && state.currentUser) {
+    allLikers = allLikers.filter((u) => u.id !== state.currentUser.id);
+    allLikers.unshift(state.currentUser);
+  }
+
+  const top3LikeUser = allLikers.slice(0, 3);
+  const firstLiker =
+    localLikedBy.length > 0 ? getUserById(localLikedBy[0]) : null;
   const firstLikerName = firstLiker?.userName || "Someone";
 
   const navigate = useNavigate();
@@ -203,22 +244,37 @@ function Post({ post }) {
     });
     navigate("/search");
   };
+
   return (
     <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-4 sm:p-6">
       {/* Post Header */}
       <div className="flex items-center gap-3 mb-4">
         <img
+          loading="lazy"
           src={
             authorProfile ||
             "https://ui-avatars.com/api/?name=User&background=random"
           }
           className="size-10 rounded-full object-cover cursor-pointer"
           onClick={() => navigate(`/profile/${post.authorId}`)}
+          alt="Author"
         />
 
         <div>
           <h3 className="font-semibold text-gray-900 dark:text-white">
             {post.author}
+            {post.feeling && (
+              <span className="font-normal text-gray-600 dark:text-gray-400 text-sm">
+                {" "}
+                is feeling {post.feeling}
+              </span>
+            )}
+            {post.location && (
+              <span className="font-normal text-gray-600 dark:text-gray-400 text-sm">
+                {" "}
+                at {post.location}
+              </span>
+            )}
           </h3>
           <p className="text-xs text-gray-500 dark:text-gray-400">
             {getTimeAgo(post.timestamp)}
@@ -227,21 +283,19 @@ function Post({ post }) {
       </div>
 
       {/* Post Content */}
-      <p className="text-gray-700 text-4 font-bold dark:text-gray-300 mb-4">
+      <p className="text-gray-700 text-4 font-bold dark:text-gray-300 mb-2">
         {post.title}
       </p>
       <div className="relative flex justify-center">
-        {/* Only show carousel if MULTIPLE images (2+) */}
         {post.postImages && post.postImages.length > 1 && (
           <div className="">
-            {/* Image */}
             <img
+              loading="lazy"
               src={post.postImages[currentImgIndex]}
               alt=""
               className="rounded-lg w-full h-96 object-contain"
             />
 
-            {/* Previous button - show if NOT on first image */}
             {currentImgIndex > 0 && (
               <button
                 onClick={() => setCurrentImgIndex(currentImgIndex - 1)}
@@ -251,7 +305,6 @@ function Post({ post }) {
               </button>
             )}
 
-            {/* Next button - show if NOT on last image */}
             {currentImgIndex < post.postImages.length - 1 && (
               <button
                 onClick={() => setCurrentImgIndex(currentImgIndex + 1)}
@@ -261,29 +314,59 @@ function Post({ post }) {
               </button>
             )}
 
-            {/* Image counter */}
             <div className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
               {currentImgIndex + 1} / {post.postImages.length}
             </div>
           </div>
         )}
 
-        {/* Show single image if only 1 image */}
         {post.postImages && post.postImages.length === 1 && (
           <img
+            loading="lazy"
             src={post.postImages[0]}
             alt=""
             className="rounded-lg w-full h-96 object-contain"
           />
         )}
-      </div>
-      <p className="text-gray-700 dark:text-gray-300 mb-4">{post.content}</p>
 
-      <div className="flex gap-1">
-        {post.tags?.map((tag, idx) => (
+        {post.video && (
+          <div className="relative w-full group">
+            <video
+              ref={videoRef}
+              src={post.video}
+              className="max-h-[600px] w-auto max-w-full mx-auto rounded-lg cursor-pointer"
+              onClick={togglePlay}
+              loop
+              playsInline
+            />
+            <div
+              className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
+                isPlaying ? "opacity-0 group-hover:opacity-100" : "opacity-100"
+              }`}
+            >
+              <button
+                onClick={togglePlay}
+                className="bg-black/50 hover:bg-black/70 text-white rounded-full p-4 backdrop-blur-sm transition-all transform hover:scale-110"
+              >
+                {isPlaying ? (
+                  <FaPause className="w-8 h-8" />
+                ) : (
+                  <FaPlay className="w-8 h-8 pl-1" />
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+      <p className="text-gray-700 dark:text-gray-300 mb-4 pt-1">
+        {post.content}
+      </p>
+
+      <div className="flex gap-2 flex-wrap mb-4">
+        {post.tags?.map((tag) => (
           <span
-            key={idx}
-            className="bg-gray-400 rounded-sm p-1 mb-1 text-[12px] font-medium hover:text-blue-600 transition-all duration-200 cursor-pointer"
+            key={tag}
+            className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded-full px-2 py-0.5 text-[12px] font-semibold hover:bg-blue-200 dark:hover:bg-blue-900/60 transition-colors cursor-pointer"
             onClick={() => handleTagSearch(tag)}
           >
             #{tag}
@@ -321,12 +404,16 @@ function Post({ post }) {
           </button>
         </div>
         <div className="flex gap-4.5">
-          <button
-            className="flex items-center"
-            onClick={() => setAddToAlbumModalOpen(true)}
-          >
-            <FaImages className="w-5 h-5 text-gray-600 dark:text-gray-400 hover:text-green-600 transition-all duration-200" />
-          </button>
+          {/* ✅ 4. Hide AddToAlbum icon if prop is true */}
+          {!hideAddToAlbum && (
+            <button
+              className="flex items-center"
+              onClick={() => setAddToAlbumModalOpen(true)}
+            >
+              <FaImages className="w-5 h-5 text-gray-600 dark:text-gray-400 hover:text-green-600 transition-all duration-200" />
+            </button>
+          )}
+
           <Link to={`/post/${post.id}/edit`} className="flex items-center">
             {state.currentUser?.userName === post.author && (
               <FiEdit className="w-5 h-5 text-gray-600 dark:text-gray-400 hover:text-green-600 transition-all duration-200" />
@@ -343,13 +430,14 @@ function Post({ post }) {
         </div>
       </div>
 
-      {/* Likes Section */}
-      {post.likes > 0 && (
+      {/* Likes Section (Updated to use localLikes) */}
+      {localLikes > 0 && (
         <div className="liked-by flex gap-1 items-center px-1 pb-3 border-b border-gray-200 dark:border-gray-700">
           <div className="like-profile flex -ml-4">
             {top3LikeUser.map((user) => (
               <span key={user.id} className="ml-1 -mr-2">
                 <img
+                  loading="lazy"
                   src={user.profilePicture}
                   alt={user.userName}
                   className="w-5 h-5 rounded-full object-cover border-2 border-white dark:border-gray-900"
@@ -364,12 +452,12 @@ function Post({ post }) {
                 <span className="font-semibold text-gray-900 dark:text-white">
                   You
                 </span>
-                {post.likes > 1 && (
+                {localLikes > 1 && (
                   <>
                     {" "}
                     and{" "}
                     <span className="font-semibold text-gray-900 dark:text-white">
-                      {post.likes - 1} others
+                      {localLikes - 1} others
                     </span>
                   </>
                 )}
@@ -380,12 +468,12 @@ function Post({ post }) {
                 <span className="font-semibold text-gray-900 dark:text-white">
                   {firstLikerName}
                 </span>
-                {post.likes > 1 && (
+                {localLikes > 1 && (
                   <>
                     {" "}
                     and{" "}
                     <span className="font-semibold text-gray-900 dark:text-white">
-                      {post.likes - 1} others
+                      {localLikes - 1} others
                     </span>
                   </>
                 )}
@@ -398,6 +486,7 @@ function Post({ post }) {
       {/* Comments Section */}
       {onCommentsPosts.includes(post.id) && (
         <div className="comments-section mt-4">
+          {/* (Existing comment code unchanged) */}
           <button className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-3 hover:text-gray-700 dark:hover:text-gray-300">
             View all {post.comments?.length || 0} comments
           </button>
@@ -411,6 +500,7 @@ function Post({ post }) {
                 <div key={index} className="flex gap-3">
                   <div className="flex-shrink-0">
                     <img
+                      loading="lazy"
                       src={state.currentUser?.profilePicture}
                       alt={state.currentUser?.userName || "User"}
                       className="size-8 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
@@ -471,6 +561,7 @@ function Post({ post }) {
             {/* User Avatar */}
             <div className="flex-shrink-0">
               <img
+                loading="lazy"
                 src={state.currentUser?.profilePicture}
                 alt={state.currentUser?.userName || "User"}
                 className="size-8 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"

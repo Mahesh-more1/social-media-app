@@ -1,5 +1,5 @@
 import { createContext, useReducer, useContext, useCallback, useEffect } from "react";
-import socialMediaReducer, { initalState } from "./socialMediaReducer";
+import socialMediaReducer, { initialState } from "./socialMediaReducer";
 import { LOAD_ALBUMS, CREATE_ALBUM } from "./actionTypes";
 import * as albumService from "../services/albumService";
 
@@ -10,7 +10,7 @@ export const useSocialMedia = () => {
 };
 
 const SocialMediaProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(socialMediaReducer, initalState);
+  const [state, dispatch] = useReducer(socialMediaReducer, initialState);
 
   const getAlbums = useCallback(async (userId) => {
     try {

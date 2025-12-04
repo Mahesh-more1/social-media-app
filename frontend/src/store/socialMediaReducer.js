@@ -33,7 +33,7 @@ const getUserFromStorage = () => {
   const user = localStorage.getItem("user");
   return user ? JSON.parse(user) : null;
 };
-export const initalState = {
+export const initialState = {
   posts: [],
   bookmarks: getUserFromStorage()?.bookmarks || [],
   currentUser: getUserFromStorage() || null,

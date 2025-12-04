@@ -47,13 +47,16 @@ exports.getUserAlbums = async (req, res) => {
 exports.getAlbumById = async (req, res) => {
   try {
     const { albumId } = req.params;
-    const album = await Album.findById(albumId).populate({
-      path: "posts",
-      populate: {
-        path: "authorId",
-        select: "username profilePicture",
-      },
-    });
+    const album = await Album.findById(albumId)
+      .populate("creator", "username profilePicture")
+      .populate({
+        path: "posts",
+
+        populate: {
+          path: "authorId",
+          select: "username profilePicture",
+        },
+      });
 
     if (!album) {
       return res.status(404).json({ message: "Album not found" });
@@ -93,9 +96,7 @@ exports.addPostToAlbum = async (req, res) => {
     }
 
     if (album.posts.includes(postId)) {
-      return res
-        .status(400)
-        .json({ message: "Post already in this album" });
+      return res.status(400).json({ message: "Post already in this album" });
     }
 
     album.posts.push(postId);

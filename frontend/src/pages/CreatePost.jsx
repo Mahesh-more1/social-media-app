@@ -21,6 +21,14 @@ function CreatePost() {
   const [selectedImages, setSelectedImages] = useState([]); // Array of File objects
   const [previewUrls, setPreviewUrls] = useState([]); // Array of preview URLs
 
+  // New Feature States
+  const [selectedVideo, setSelectedVideo] = useState(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState(null);
+  const [feeling, setFeeling] = useState("");
+  const [location, setLocation] = useState("");
+  const [showFeelingInput, setShowFeelingInput] = useState(false);
+  const [showLocationInput, setShowLocationInput] = useState(false);
+
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
 
@@ -35,6 +43,18 @@ function CreatePost() {
     setPreviewUrls(urls);
   };
 
+  const handleVideoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 50 * 1024 * 1024) {
+        alert("Video size should be less than 50MB");
+        return;
+      }
+      setSelectedVideo(file);
+      setVideoPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
   const removeImage = (index) => {
     const newImages = selectedImages.filter((_, i) => i !== index);
     const newUrls = previewUrls.filter((_, i) => i !== index);
@@ -43,6 +63,14 @@ function CreatePost() {
 
     setSelectedImages(newImages);
     setPreviewUrls(newUrls);
+  };
+
+  const removeVideo = () => {
+    if (videoPreviewUrl) {
+      URL.revokeObjectURL(videoPreviewUrl);
+    }
+    setSelectedVideo(null);
+    setVideoPreviewUrl(null);
   };
 
   const handlePostSubmit = async (e) => {
@@ -55,9 +83,16 @@ function CreatePost() {
       formData.append("privacy", selectedPostPrivacy);
       formData.append("author", state.currentUser?.userName);
       formData.append("authorId", state.currentUser?.id);
+      if (feeling) formData.append("feeling", feeling);
+      if (location) formData.append("location", location);
+
       selectedImages.forEach((file) => {
         formData.append("photos", file);
       });
+
+      if (selectedVideo) {
+        formData.append("video", selectedVideo);
+      }
       const newPost = await addPostToServer(formData);
       dispatch({
         type: ADD_POST,
@@ -70,6 +105,11 @@ function CreatePost() {
       setSelectedImages([]);
       previewUrls.forEach((url) => URL.revokeObjectURL(url));
       setPreviewUrls([]);
+      setFeeling("");
+      setLocation("");
+      setShowFeelingInput(false);
+      setShowLocationInput(false);
+      removeVideo();
       navigate("/");
     } catch (error) {
       console.error("❌ Error creating post:", error);
@@ -82,7 +122,7 @@ function CreatePost() {
   );
 
   return (
-    <main className="flex-grow p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-800 min-h-screen">
+    <main className="flex-grow p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-800">
       <div className="max-w-2xl mx-auto">
         {/* Create Post Header */}
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6 mb-6">
@@ -102,6 +142,7 @@ function CreatePost() {
           {/* User Info */}
           <div className="flex items-center gap-3 mb-6">
             <img
+              loading="lazy"
               src={state.currentUser?.profilePicture}
               alt="Profile"
               className="w-12 h-12 rounded-full object-cover"
@@ -182,6 +223,7 @@ function CreatePost() {
                 {previewUrls.map((url, index) => (
                   <div key={index} className="relative group">
                     <img
+                      loading="lazy"
                       src={url}
                       alt={`Preview ${index + 1}`}
                       className="w-full h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
@@ -196,6 +238,68 @@ function CreatePost() {
                     </button>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Video Preview */}
+          {videoPreviewUrl && (
+            <div className="mb-4 relative group inline-block">
+              <video
+                src={videoPreviewUrl}
+                controls
+                className="max-h-48 rounded-lg border border-gray-200 dark:border-gray-700"
+              />
+              <button
+                type="button"
+                onClick={removeVideo}
+                className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Remove video"
+              >
+                ×
+              </button>
+            </div>
+          )}
+
+          {/* Feeling and Location Inputs */}
+          {showFeelingInput && (
+            <div className="mb-3">
+              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-2">
+                <FaSmile className="text-yellow-500" />
+                <input
+                  type="text"
+                  value={feeling}
+                  onChange={(e) => setFeeling(e.target.value)}
+                  placeholder="How are you feeling?"
+                  className="bg-transparent flex-grow focus:outline-none text-sm text-gray-900 dark:text-white"
+                />
+                <button
+                  onClick={() => setShowFeelingInput(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          )}
+
+          {showLocationInput && (
+            <div className="mb-4">
+              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-2">
+                <FaMapMarkerAlt className="text-red-500" />
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="Where are you?"
+                  className="bg-transparent flex-grow focus:outline-none text-sm text-gray-900 dark:text-white"
+                />
+                <button
+                  onClick={() => setShowLocationInput(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ×
+                </button>
               </div>
             </div>
           )}
@@ -219,27 +323,39 @@ function CreatePost() {
                 />
               </label>
 
-              {/* Other buttons (disabled for now) */}
-              <button
-                type="button"
-                disabled
-                className="flex items-center gap-2 text-gray-400 p-2 rounded-lg cursor-not-allowed opacity-50"
-              >
+              {/* Video Upload Button */}
+              <label className="flex items-center gap-2 text-gray-500 hover:text-blue-500 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer">
                 <FaVideo className="text-lg" />
                 <span className="text-sm">Video</span>
-              </button>
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={handleVideoChange}
+                  className="hidden"
+                />
+              </label>
+
               <button
                 type="button"
-                disabled
-                className="flex items-center gap-2 text-gray-400 p-2 rounded-lg cursor-not-allowed opacity-50"
+                onClick={() => setShowFeelingInput(!showFeelingInput)}
+                className={`flex items-center gap-2 p-2 rounded-lg transition-colors ${
+                  showFeelingInput
+                    ? "text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20"
+                    : "text-gray-500 hover:text-yellow-500 hover:bg-gray-50 dark:hover:bg-gray-800"
+                }`}
               >
                 <FaSmile className="text-lg" />
                 <span className="text-sm">Feeling</span>
               </button>
+
               <button
                 type="button"
-                disabled
-                className="flex items-center gap-2 text-gray-400 p-2 rounded-lg cursor-not-allowed opacity-50"
+                onClick={() => setShowLocationInput(!showLocationInput)}
+                className={`flex items-center gap-2 p-2 rounded-lg transition-colors ${
+                  showLocationInput
+                    ? "text-red-500 bg-red-50 dark:bg-red-900/20"
+                    : "text-gray-500 hover:text-red-500 hover:bg-gray-50 dark:hover:bg-gray-800"
+                }`}
               >
                 <FaMapMarkerAlt className="text-lg" />
                 <span className="text-sm">Location</span>

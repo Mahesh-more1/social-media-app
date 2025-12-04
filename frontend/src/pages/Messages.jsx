@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   FaSearch,
   FaEllipsisH,
@@ -6,6 +6,8 @@ import {
   FaArrowLeft,
   FaPaperPlane,
   FaSmile,
+  FaPlus,
+  FaImage,
 } from "react-icons/fa";
 import { useSocialMedia } from "../store/SocialMediaContext";
 import {
@@ -26,7 +28,7 @@ function Messages() {
   const [messageText, setMessageText] = useState("");
   const [loading, setLoading] = useState(false);
   const [showUserList, setShowUserList] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
     loadConversations();
@@ -45,6 +47,14 @@ function Messages() {
       return () => clearInterval(messageInterval);
     }
   }, [selectedConversation]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [state.messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   const loadConversations = async () => {
     try {
@@ -68,6 +78,7 @@ function Messages() {
     setSelectedConversation(conversation);
     setMessageText("");
     loadMessages(conversation.conversationId);
+    setShowUserList(false);
   };
 
   const handleSelectUserToChat = (user) => {
@@ -83,6 +94,7 @@ function Messages() {
     setSelectedConversation(conversation);
     dispatch({ type: LOAD_MESSAGES, payload: [] });
     setShowUserList(false);
+    setSearchQuery("");
   };
 
   const handleSendMessage = async () => {
@@ -116,239 +128,307 @@ function Messages() {
       user.id !== state.currentUser?.id
   );
 
-  // Show user list if search has results and search query exists
-  const showUsers = searchQuery.trim() && showUserList;
-
-  console.log("Conversations loaded:", state.conversations);
-  console.log("Filtered conversations:", filteredConversations);
-
-  if (selectedConversation) {
-    return (
-      <main className="flex-grow bg-gray-50 dark:bg-gray-800 min-h-screen">
-        <div className="max-w-4xl mx-auto bg-white dark:bg-gray-900 min-h-screen flex flex-col">
-          {/* Chat Header */}
-          <div className="border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+  return (
+    <main className="flex-grow bg-gray-50 dark:bg-gray-900 h-[calc(100vh-4rem)] overflow-hidden">
+      <div className="max-w-7xl mx-auto h-full flex shadow-xl overflow-hidden bg-white dark:bg-gray-800 rounded-none md:rounded-2xl md:my-4 md:border border-gray-200 dark:border-gray-700">
+        {/* Sidebar (Conversation List) */}
+        <div
+          className={`${
+            selectedConversation ? "hidden md:flex" : "flex"
+          } w-full md:w-80 lg:w-96 flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900`}
+        >
+          {/* Sidebar Header */}
+          <div className="p-4 border-b border-gray-100 dark:border-gray-800">
+            <div className="flex justify-between items-center mb-4">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Messages
+              </h1>
               <button
-                onClick={() => setSelectedConversation(null)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"
+                onClick={() => setShowUserList(!showUserList)}
+                className="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
               >
-                <FaArrowLeft className="text-gray-600 dark:text-gray-400" />
+                <FaPlus />
               </button>
-              <div className="flex items-center gap-3">
-                <img
-                  src={`https://ui-avatars.com/api/?name=${selectedConversation.otherUser.name}&background=random`}
-                  alt={selectedConversation.otherUser.name}
-                  className="w-10 h-10 rounded-full"
-                />
-                <div>
-                  <h2 className="font-semibold text-gray-900 dark:text-white">
-                    {selectedConversation.otherUser.name}
-                  </h2>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Active now
-                  </p>
-                </div>
-              </div>
             </div>
-            <button className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400">
-              <FaEllipsisH />
-            </button>
-          </div>
 
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col-reverse">
-            {state.messages.length === 0 ? (
-              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                No messages yet. Start the conversation!
-              </div>
-            ) : (
-              [...state.messages].reverse().map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${
-                    msg.senderId === state.currentUser.id
-                      ? "justify-end"
-                      : "justify-start"
-                  }`}
-                >
-                  <div
-                    className={`max-w-xs px-4 py-2 rounded-lg ${
-                      msg.senderId === state.currentUser.id
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white"
-                    }`}
-                  >
-                    <p className="text-sm">{msg.text}</p>
-                    <p
-                      className={`text-xs mt-1 ${
-                        msg.senderId === state.currentUser.id
-                          ? "text-blue-100"
-                          : "text-gray-600 dark:text-gray-400"
-                      }`}
-                    >
-                      {new Date(msg.createdAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Message Input */}
-          <div className="border-t border-gray-200 dark:border-gray-700 p-4">
-            <div className="flex items-center gap-3">
-              <button className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400">
-                <FaSmile className="text-xl" />
-              </button>
+            {/* Search Bar */}
+            <div className="relative">
+              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                value={messageText}
-                onChange={(e) => setMessageText(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                placeholder="Type a message..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                placeholder="Search messages..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  if (e.target.value) setShowUserList(true);
+                }}
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-100 dark:bg-gray-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-blue-500 dark:text-white"
               />
-              <button
-                onClick={handleSendMessage}
-                disabled={loading || !messageText.trim()}
-                className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 disabled:opacity-50"
-              >
-                <FaPaperPlane />
-              </button>
             </div>
           </div>
-        </div>
-      </main>
-    );
-  }
 
-  return (
-    <main className="flex-grow bg-gray-50 dark:bg-gray-800 min-h-screen">
-      <div className="max-w-6xl mx-auto bg-white dark:bg-gray-900 min-h-screen">
-        {/* Messages Header */}
-        <div className="border-b border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-              Messages
-            </h1>
-            <button
-              onClick={() => setShowUserList(!showUserList)}
-              className="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm"
-            >
-              + New Message
-            </button>
-          </div>
-
-          {/* Search */}
-          <div className="relative mt-4">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FaSearch className="h-4 w-4 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setShowUserList(true);
-              }}
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-full bg-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white text-sm"
-              placeholder="Search messages or users..."
-            />
-          </div>
-        </div>
-
-        {/* User List (to start new conversations) */}
-        {showUsers && (
-          <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-            <div className="p-2">
-              <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 px-2 py-2">
-                SELECT USER TO CHAT
-              </p>
-              {filteredUsers.length === 0 ? (
-                <div className="p-4 text-center text-sm text-gray-500">
-                  No users found
-                </div>
-              ) : (
-                filteredUsers.map((user) => (
+          {/* List Content */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
+            {showUserList && searchQuery ? (
+              <div className="p-2">
+                <p className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Start New Chat
+                </p>
+                {filteredUsers.map((user) => (
                   <div
                     key={user.id}
                     onClick={() => handleSelectUserToChat(user)}
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer rounded flex items-center gap-2"
+                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors mx-2"
                   >
                     <img
                       src={`https://ui-avatars.com/api/?name=${user.userName}&background=random`}
                       alt={user.userName}
-                      className="w-8 h-8 rounded-full"
+                      className="w-10 h-10 rounded-full"
                     />
-                    <span className="text-sm text-gray-900 dark:text-white">
+                    <span className="font-medium text-gray-900 dark:text-white">
                       {user.userName}
                     </span>
                   </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Conversations List */}
-        {!showUsers && (
-          <div className="divide-y divide-gray-200 dark:divide-gray-700">
-            {filteredConversations.length === 0 ? (
-              <div className="p-8 text-center">
-                <p className="text-gray-500 dark:text-gray-400">
-                  No conversations yet
-                </p>
-                <button
-                  onClick={() => setShowUserList(true)}
-                  className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                >
-                  Start a Conversation
-                </button>
+                ))}
               </div>
             ) : (
-              filteredConversations.map((convo) => (
-                <div
-                  key={convo.conversationId}
-                  onClick={() => handleSelectConversation(convo)}
-                  className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition"
-                >
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={`https://ui-avatars.com/api/?name=${convo.otherUser.name}&background=random`}
-                      alt={convo.otherUser.name}
-                      className="w-12 h-12 rounded-full"
-                    />
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-gray-900 dark:text-white truncate">
-                          {convo.otherUser.name}
-                        </h3>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {new Date(convo.lastMessageTime).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                          {convo.lastMessage}
-                        </p>
+              <div className="p-2 space-y-1">
+                {filteredConversations.length === 0 ? (
+                  <div className="text-center py-10 px-6">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">
+                      No conversations yet.
+                    </p>
+                    <button
+                      onClick={() => setShowUserList(true)}
+                      className="mt-4 text-blue-600 dark:text-blue-400 text-sm font-medium hover:underline"
+                    >
+                      Start a new chat
+                    </button>
+                  </div>
+                ) : (
+                  filteredConversations.map((convo) => (
+                    <div
+                      key={convo.conversationId}
+                      onClick={() => handleSelectConversation(convo)}
+                      className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${
+                        selectedConversation?.conversationId ===
+                        convo.conversationId
+                          ? "bg-blue-50 dark:bg-blue-900/20 shadow-sm"
+                          : "hover:bg-gray-50 dark:hover:bg-gray-800"
+                      }`}
+                    >
+                      <div className="relative">
+                        <img
+                          src={`https://ui-avatars.com/api/?name=${convo.otherUser.name}&background=random`}
+                          alt={convo.otherUser.name}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
                         {convo.unreadCount > 0 && (
-                          <span className="bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center ml-2">
+                          <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white dark:border-gray-900">
                             {convo.unreadCount}
                           </span>
                         )}
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-baseline mb-1">
+                          <h3
+                            className={`font-semibold truncate ${
+                              selectedConversation?.conversationId ===
+                              convo.conversationId
+                                ? "text-blue-700 dark:text-blue-400"
+                                : "text-gray-900 dark:text-white"
+                            }`}
+                          >
+                            {convo.otherUser.name}
+                          </h3>
+                          <span className="text-xs text-gray-400 flex-shrink-0">
+                            {new Date(
+                              convo.lastMessageTime
+                            ).toLocaleDateString() ===
+                            new Date().toLocaleDateString()
+                              ? new Date(
+                                  convo.lastMessageTime
+                                ).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                              : new Date(
+                                  convo.lastMessageTime
+                                ).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p
+                          className={`text-sm truncate ${
+                            convo.unreadCount > 0
+                              ? "font-semibold text-gray-900 dark:text-white"
+                              : "text-gray-500 dark:text-gray-400"
+                          }`}
+                        >
+                          {convo.lastMessage || "Started a conversation"}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Main Chat Area */}
+        <div
+          className={`${
+            !selectedConversation ? "hidden md:flex" : "flex"
+          } flex-1 flex-col bg-gray-50/50 dark:bg-gray-900/50`}
+        >
+          {selectedConversation ? (
+            <>
+              {/* Chat Header */}
+              <div className="p-4 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between shadow-sm z-10">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setSelectedConversation(null)}
+                    className="md:hidden p-2 -ml-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"
+                  >
+                    <FaArrowLeft />
+                  </button>
+                  <img
+                    src={`https://ui-avatars.com/api/?name=${selectedConversation.otherUser.name}&background=random`}
+                    alt={selectedConversation.otherUser.name}
+                    className="w-10 h-10 rounded-full"
+                  />
+                  <div>
+                    <h2 className="font-bold text-gray-900 dark:text-white">
+                      {selectedConversation.otherUser.name}
+                    </h2>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        Online
+                      </span>
                     </div>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
-        )}
+                <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                  <FaEllipsisH />
+                </button>
+              </div>
+
+              {/* Messages List */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar bg-pattern">
+                {state.messages.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-center opacity-50">
+                    <img
+                      src={`https://ui-avatars.com/api/?name=${selectedConversation.otherUser.name}&background=random&size=128`}
+                      className="w-24 h-24 rounded-full mb-4 opacity-75"
+                      alt=""
+                    />
+                    <p className="text-gray-500 dark:text-gray-400">
+                      Say hello to{" "}
+                      <span className="font-bold">
+                        {selectedConversation.otherUser.name}
+                      </span>
+                      ! 👋
+                    </p>
+                  </div>
+                ) : (
+                  state.messages.map((msg, index) => {
+                    const isMe = msg.senderId === state.currentUser.id;
+                    return (
+                      <div
+                        key={msg.id || index}
+                        className={`flex ${
+                          isMe ? "justify-end" : "justify-start"
+                        } group`}
+                      >
+                        <div
+                          className={`flex flex-col max-w-[75%] ${
+                            isMe ? "items-end" : "items-start"
+                          }`}
+                        >
+                          <div
+                            className={`px-5 py-3 rounded-2xl shadow-sm text-sm leading-relaxed break-words ${
+                              isMe
+                                ? "bg-blue-600 text-white rounded-br-none"
+                                : "bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-none border border-gray-100 dark:border-gray-700"
+                            }`}
+                          >
+                            {msg.text}
+                          </div>
+                          <span
+                            className={`text-[10px] mt-1 px-1 ${
+                              isMe ? "text-gray-400" : "text-gray-400"
+                            }`}
+                          >
+                            {new Date(msg.createdAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                            {isMe && (
+                              <FaCheckDouble className="inline ml-1 text-blue-500" />
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Input Area */}
+              <div className="p-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2">
+                  <button className="p-2 text-gray-400 hover:text-blue-500 transition-colors">
+                    <FaPlus />
+                  </button>
+                  <input
+                    type="text"
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                    placeholder="Type a message..."
+                    className="flex-1 bg-transparent border-none focus:ring-0 text-gray-900 dark:text-white placeholder-gray-500"
+                  />
+                  <button className="p-2 text-gray-400 hover:text-yellow-500 transition-colors">
+                    <FaSmile />
+                  </button>
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={!messageText.trim() || loading}
+                    className={`p-2 rounded-full transition-all ${
+                      messageText.trim()
+                        ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md transform hover:scale-105"
+                        : "bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed"
+                    }`}
+                  >
+                    <FaPaperPlane className="text-sm" />
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            /* Empty State (Desktop) */
+            <div className="hidden md:flex flex-col items-center justify-center h-full text-center p-8">
+              <div className="w-24 h-24 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center mb-6">
+                <FaPaperPlane className="text-4xl text-blue-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                Your Messages
+              </h2>
+              <p className="text-gray-500 dark:text-gray-400 max-w-md">
+                Select a conversation from the list or start a new one to
+                connect with your friends.
+              </p>
+              <button
+                onClick={() => setShowUserList(true)}
+                className="mt-8 px-6 py-3 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+              >
+                Start New Message
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </main>
   );

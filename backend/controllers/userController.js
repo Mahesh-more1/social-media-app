@@ -159,10 +159,6 @@ exports.editUserProfile = async (req, res, next) => {
     const userId = req.user.id;
     const { handle, bio, location, profession, website } = req.body;
 
-    console.log("📝 req.body:", req.body);
-    console.log("📸 req.files:", req.files);
-    console.log("👤 User ID from token:", userId);
-
     if (!handle) {
       return res.status(400).json({
         message: "Handle is required",
@@ -179,20 +175,12 @@ exports.editUserProfile = async (req, res, next) => {
 
     if (req.files && req.files.profilePicture) {
       const profilePicFile = req.files.profilePicture[0];
-      updateData.profilePicture = `http://localhost:3000/${profilePicFile.path.replace(
-        /\\/g,
-        "/"
-      )}`;
-      console.log("📷 Profile picture:", updateData.profilePicture);
+      updateData.profilePicture = profilePicFile.path;
     }
 
     if (req.files && req.files.coverPhoto) {
       const coverPhotoFile = req.files.coverPhoto[0];
-      updateData.coverPhoto = `http://localhost:3000/${coverPhotoFile.path.replace(
-        /\\/g,
-        "/"
-      )}`;
-      console.log("🖼️ Cover photo:", updateData.coverPhoto);
+      updateData.coverPhoto = coverPhotoFile.path;
     }
 
     const user = await User.findByIdAndUpdate(userId, updateData, {
@@ -203,8 +191,6 @@ exports.editUserProfile = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-
-    console.log("✅ User updated successfully");
 
     res.status(200).json({
       message: "Profile updated successfully",

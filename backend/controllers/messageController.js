@@ -99,9 +99,6 @@ exports.getConversations = async (req, res, next) => {
       },
     ]);
 
-    console.log("User ID:", userId);
-    console.log("Raw conversations from DB:", conversations.length);
-
     const formattedConversations = conversations.map((conv) => {
       const lastMsg = conv.lastMessage;
 
@@ -133,7 +130,6 @@ exports.getConversations = async (req, res, next) => {
       };
     });
 
-    console.log("Formatted conversations:", formattedConversations);
     res.status(200).json({
       message: "Conversations fetched successfully",
       data: formattedConversations,

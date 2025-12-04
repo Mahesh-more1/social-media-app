@@ -16,17 +16,25 @@ const albumRoutes = require("./routes/albumRoutes");
 
 const app = express();
 
+app.get("/", (req, res) => res.send("Hello from the Pulse backend!"));
 
+// Define the time in milliseconds (30 days)
+// 1000ms * 60s * 60m * 24h * 30d
+const thirtyDaysInMs = 1000 * 60 * 60 * 24 * 30;
 
-app.get('/', (req, res) => res.send('Hello from the social media backend!'));
-
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "uploads"), {
+    maxAge: thirtyDaysInMs,
+  })
+);
 
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(express.json());
 
 app.use("/api/albums", albumRoutes);
+
 app.use("/api", userRoutes);
 app.use("/api", postRoutes);
 app.use("/api", bookmarkRoutes);

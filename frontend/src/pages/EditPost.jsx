@@ -48,7 +48,7 @@ function EditPost() {
   };
 
   return (
-    <main className="flex-grow p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-800 min-h-screen">
+    <main className="flex-grow p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-800">
       <div className="max-w-2xl mx-auto">
         {/* Create Post Header */}
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6 mb-6">
@@ -68,6 +68,7 @@ function EditPost() {
           {/* User Info */}
           <div className="flex items-center gap-3 mb-6">
             <img
+              loading="lazy"
               src="https://preview.redd.it/can-someone-give-me-hd-or-higher-quality-photo-of-virat-v0-wn08gbwghx5f1.jpeg?width=1252&auto=webp&s=a8e816d643481f32074a5fb96756db9a2e5e4a0b"
               alt="Profile"
               className="w-12 h-12 rounded-full object-cover"

@@ -31,77 +31,93 @@ function UserCard({ user, suggestedUser = false }) {
 
   return (
     <div
-      className={`flex items-center gap-4 bg-white dark:bg-gray-900 rounded-lg shadow-sm ${
-        suggestedUser ? "px-4 py-3" : "px-6 py-8"
+      className={`bg-white dark:bg-gray-900 rounded-lg shadow-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50 ${
+        suggestedUser ? "px-4 py-3" : "px-6 py-6"
       }`}
     >
-      <img
-        src={user.profilePicture}
-        alt={user.userName}
-        onClick={() => navigate(`/profile/${user.id}`)}
-        className={`object-cover rounded-full cursor-pointer ${
-          suggestedUser ? "w-12 h-12" : "w-16 h-16"
-        }`}
-      />
-      <div className="w-full flex justify-between items-center gap-2">
+      <div className="flex items-center gap-4">
+        {/* Avatar */}
+        <img
+          loading="lazy"
+          src={user.profilePicture}
+          alt={user.userName}
+          onClick={() => navigate(`/profile/${user.id}`)}
+          className={`object-cover rounded-full cursor-pointer flex-shrink-0 ${
+            suggestedUser ? "w-10 h-10" : "w-14 h-14"
+          }`}
+        />
+
+        {/* User Info - Takes remaining space */}
         <div
-          className={`flex ${
-            suggestedUser ? "gap-2" : "gap-10"
-          } cursor-pointer`}
+          className="flex-1 min-w-0 cursor-pointer"
           onClick={() => navigate(`/profile/${user.id}`)}
         >
-          <div className="flex flex-col w-full">
-            <h3
-              className={`font-bold text-gray-900 dark:text-white ${
-                suggestedUser ? "text-base" : "text-xl"
-              }`}
-            >
-              {user.userName}
-            </h3>
-            {!suggestedUser && (
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {user.profession} {" | "} {user.location}
-              </p>
-            )}
-            {suggestedUser && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                {user.handle}
-              </p>
-            )}
-          </div>
-          <div className={`flex flex-col ${suggestedUser ? "hidden" : ""}`}>
-            <b className="text-white text-center">{user.followersCount}</b>
-            <b className="text-white">Followers</b>
-          </div>
-          <div className={`flex flex-col ${suggestedUser ? "hidden" : ""}`}>
-            <b className="text-white text-center">{user.followingCount}</b>
-            <b className="text-white">Following</b>
-          </div>
+          <h3
+            className={`font-bold text-gray-900 dark:text-white truncate ${
+              suggestedUser ? "text-sm" : "text-lg"
+            }`}
+          >
+            {user.userName}
+          </h3>
+          <p
+            className={`text-gray-500 dark:text-gray-400 truncate ${
+              suggestedUser ? "text-xs" : "text-sm"
+            }`}
+          >
+            {suggestedUser
+              ? user.handle
+              : `${user.profession} | ${user.location}`}
+          </p>
         </div>
 
-        <div className="flex flex-col gap-1 flex-shrink-0 items-end">
+        {/* Stats & Actions - Fixed widths for alignment */}
+        <div className="flex items-center gap-4 flex-shrink-0">
           {!suggestedUser && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap pr-2">
-              {user.handle}
-            </p>
+            <>
+              <div className="hidden sm:flex flex-col items-center w-20">
+                <span className="font-bold text-gray-900 dark:text-white">
+                  {user.followersCount}
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  Followers
+                </span>
+              </div>
+              <div className="hidden sm:flex flex-col items-center w-20">
+                <span className="font-bold text-gray-900 dark:text-white">
+                  {user.followingCount}
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  Following
+                </span>
+              </div>
+            </>
           )}
-          <span
-            onClick={() => handleFollowToggle(user.id)}
-            className={`flex items-center justify-center gap-2 text-white rounded-full font-medium transition-colors cursor-pointer whitespace-nowrap ${
-              suggestedUser ? "text-xs px-3 py-1.5" : "text-sm px-4 py-2"
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleFollowToggle(user.id);
+            }}
+            className={`flex items-center justify-center gap-2 rounded-full font-medium transition-all whitespace-nowrap ${
+              suggestedUser ? "text-xs px-3 py-1.5" : "text-sm px-5 py-2 w-32"
             } ${
               isFollow
-                ? "bg-transparent border-2 border-blue-600 text-blue-600"
-                : "bg-blue-600 hover:bg-blue-700 border-2 border-transparent"
+                ? "bg-transparent border border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                : "bg-blue-600 text-white hover:bg-blue-700 border border-transparent shadow-sm hover:shadow"
             }`}
           >
             {isFollow ? (
-              <SlUserFollowing size={suggestedUser ? 16 : 20} />
+              <>
+                <SlUserFollowing size={suggestedUser ? 12 : 16} />
+                <span>Following</span>
+              </>
             ) : (
-              <SlUserFollow size={suggestedUser ? 16 : 20} />
+              <>
+                <SlUserFollow size={suggestedUser ? 12 : 16} />
+                <span>Follow</span>
+              </>
             )}
-            {isFollow ? "Following" : "Follow"}
-          </span>
+          </button>
         </div>
       </div>
     </div>

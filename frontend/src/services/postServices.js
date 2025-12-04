@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3000";
+import { API_URL } from "../config";
 
 export const addPostToServer = async (postData) => {
   const token = localStorage.getItem("token");
@@ -130,17 +130,24 @@ export const deleteCommentFromTheServer = async (postId, commentId) => {
   }
 };
 
-export const toggleLikeCommentPost = async (postId, commentId,isCommentLiked) => {
+export const toggleLikeCommentPost = async (
+  postId,
+  commentId,
+  isCommentLiked
+) => {
   const token = localStorage.getItem("token");
   if (!token) {
     throw new Error("You must be logged in to like posts");
   }
-  const response = await fetch(`${API_URL}/api/posts/${postId}/comments/${commentId}/like`, {
-    method: isCommentLiked ? "DELETE" : "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  const response = await fetch(
+    `${API_URL}/api/posts/${postId}/comments/${commentId}/like`,
+    {
+      method: isCommentLiked ? "DELETE" : "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.message || "Failed to toggle like");
@@ -149,8 +156,6 @@ export const toggleLikeCommentPost = async (postId, commentId,isCommentLiked) =>
 };
 
 export const mapServerItemToLocalItem = (serverItem) => {
-  const API_URL = "http://localhost:3000";
-
   const mapImageUrl = (url) => {
     if (typeof url !== "string") return "";
 
@@ -183,5 +188,8 @@ export const mapServerItemToLocalItem = (serverItem) => {
     timestamp: serverItem.createdAt,
     createdAt: serverItem.createdAt,
     updatedAt: serverItem.updatedAt,
+    video: mapImageUrl(serverItem.video),
+    feeling: serverItem.feeling,
+    location: serverItem.location,
   };
 };

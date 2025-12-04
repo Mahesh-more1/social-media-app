@@ -75,6 +75,15 @@ const postSchema = new mongoose.Schema(
         type: String,
       },
     ],
+    video: {
+      type: String, // URL to the video file
+    },
+    feeling: {
+      type: String,
+    },
+    location: {
+      type: String,
+    },
     tags: [
       {
         type: String,

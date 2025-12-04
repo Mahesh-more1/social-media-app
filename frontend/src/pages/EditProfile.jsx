@@ -119,7 +119,7 @@ function EditProfile() {
   };
 
   return (
-    <main className="flex-grow p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-800 min-h-screen">
+    <main className="flex-grow p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-800">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6 mb-6">
@@ -139,6 +139,7 @@ function EditProfile() {
           <div className="relative h-48 bg-gradient-to-r from-blue-500 to-purple-600 overflow-visible">
             {coverPreview ? (
               <img
+                loading="lazy"
                 src={coverPreview}
                 alt="Cover"
                 className="w-full h-full object-cover"
@@ -179,6 +180,7 @@ function EditProfile() {
             <div className="relative -mt-16 mb-4">
               <div className="relative inline-block">
                 <img
+                  loading="lazy"
                   src={
                     profilePreview ||
                     "https://ui-avatars.com/api/?name=User&background=random"

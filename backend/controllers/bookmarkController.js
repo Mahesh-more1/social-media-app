@@ -39,7 +39,6 @@ exports.removeBookmark = async (req, res) => {
     const userId = req.user.id;
     const postId = req.params.postId;
 
-    console.log("🗑️ Removing bookmark:", { userId, postId });
 
     const user = await User.findById(userId);
 

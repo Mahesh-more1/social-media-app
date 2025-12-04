@@ -62,7 +62,7 @@ function Profile() {
 
   if (!user)
     return (
-      <main className="flex-grow p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-800 min-h-screen">
+      <main className="flex-grow p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-800">
         <div className="max-w-4xl mx-auto text-center py-12">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
             User Not Found
@@ -81,13 +81,14 @@ function Profile() {
     );
 
   return (
-    <main className="flex-grow p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-800 min-h-screen">
+    <main className="flex-grow p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-800">
       <div className="max-w-4xl mx-auto">
         {/* Profile Header */}
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm overflow-hidden mb-6">
           {/* Cover Photo */}
           <div className="h-48 flex justify-center bg-gradient-to-r from-blue-500 to-purple-600">
             <img
+              loading="lazy"
               alt="Profile"
               src={user.coverPhoto}
               className="h-48 bg-red-500 border-2 border-white dark:border-gray-900"
@@ -99,6 +100,7 @@ function Profile() {
             <div className="flex flex-col sm:flex-row items-start sm:items-end -mt-16 mb-4">
               {/* Profile Picture */}
               <img
+                loading="lazy"
                 alt="Profile"
                 src={user.profilePicture}
                 className="size-32 rounded-full object-cover bg-red-500 border-4 border-white dark:border-gray-900"
@@ -116,7 +118,6 @@ function Profile() {
                   </Link>
                 ) : (
                   <>
-                    
                     <button
                       onClick={() => handleFollowToggle(user.id)}
                       className={`flex items-center justify-center gap-2 text-white rounded-full font-medium transition-colors cursor-pointer whitespace-nowrap text-sm px-4 py-2 ${

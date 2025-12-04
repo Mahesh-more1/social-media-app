@@ -1,10 +1,10 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:3000/api";
+import { API_URL } from "../config";
 
+// ✅ FIX: Get token directly from "token" key, not from inside "user" object
 const getAuthToken = () => {
-  const user = JSON.parse(localStorage.getItem("user"));
-  return user ? user.token : null;
+  return localStorage.getItem("token");
 };
 
 const getAuthConfig = () => ({
@@ -14,23 +14,28 @@ const getAuthConfig = () => ({
 });
 
 export const getUserAlbums = async (userId) => {
-  const response = await axios.get(`${API_URL}/albums/user/${userId}`);
+  const response = await axios.get(`${API_URL}/api/albums/user/${userId}`);
   return response.data;
 };
 
 export const createAlbum = async (albumData) => {
-  const response = await axios.post(`${API_URL}/albums`, albumData, getAuthConfig());
+  // This header call will now have the correct token
+  const response = await axios.post(
+    `${API_URL}/api/albums`,
+    albumData,
+    getAuthConfig()
+  );
   return response.data;
 };
 
 export const getAlbumById = async (albumId) => {
-  const response = await axios.get(`${API_URL}/albums/${albumId}`);
+  const response = await axios.get(`${API_URL}/api/albums/${albumId}`);
   return response.data;
 };
 
 export const addPostToAlbum = async (albumId, postId) => {
   const response = await axios.put(
-    `${API_URL}/albums/${albumId}/add-post`,
+    `${API_URL}/api/albums/${albumId}/add-post`,
     { postId },
     getAuthConfig()
   );
@@ -39,7 +44,7 @@ export const addPostToAlbum = async (albumId, postId) => {
 
 export const removePostFromAlbum = async (albumId, postId) => {
   const response = await axios.put(
-    `${API_URL}/albums/${albumId}/remove-post`,
+    `${API_URL}/api/albums/${albumId}/remove-post`,
     { postId },
     getAuthConfig()
   );
@@ -47,6 +52,9 @@ export const removePostFromAlbum = async (albumId, postId) => {
 };
 
 export const deleteAlbum = async (albumId) => {
-  const response = await axios.delete(`${API_URL}/albums/${albumId}`, getAuthConfig());
+  const response = await axios.delete(
+    `${API_URL}/api/albums/${albumId}`,
+    getAuthConfig()
+  );
   return response.data;
 };

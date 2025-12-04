@@ -6,22 +6,29 @@ const Notification = require("../models/Notification");
 
 exports.createPost = async (req, res, next) => {
   try {
-    const { title, content, tags, privacy } = req.body;
+    const { title, content, tags, privacy, feeling, location } = req.body;
     const userId = req.user.id;
+
     let postImages = [];
-    if (req.files && req.files.length > 0) {
-      postImages = req.files.map((file) => `/uploads/${file.filename}`);
+    let video = "";
+
+    // Handle Photos
+    if (req.files && req.files["photos"]) {
+      postImages = req.files["photos"].map((file) => file.path);
     }
+
+    // Handle Video
+    if (req.files && req.files["video"]) {
+      video = req.files["video"][0].path;
+    }
+
     let parsedTags = [];
     if (tags && typeof tags === "string") {
       parsedTags = tags
         .split(/[\s,]+/)
         .map((tag) => tag.trim())
         .filter((tag) => tag.length > 0);
-    } else {
-      console.log("❌ NOT entering split! tags is:", tags);
     }
-
     const user = await User.findById(userId);
 
     const newPost = new Post({
@@ -32,6 +39,9 @@ exports.createPost = async (req, res, next) => {
       authorId: userId,
       privacy,
       postImages,
+      video,
+      feeling,
+      location,
     });
     await newPost.save();
     res.json(newPost);
@@ -70,12 +80,6 @@ exports.editPost = async (req, res, next) => {
     const userId = req.user.id;
     const { title, content, tags, privacy } = req.body;
 
-    console.log("📝 Edit request:", {
-      postId,
-      userId,
-      body: req.body,
-    });
-
     const post = await Post.findById(postId);
 
     if (!post) {
@@ -107,8 +111,6 @@ exports.editPost = async (req, res, next) => {
       },
       { new: true, runValidators: true }
     );
-
-    console.log("✅ Post updated:", updatedPost._id);
 
     res.json(updatedPost);
   } catch (error) {
@@ -148,7 +150,6 @@ exports.deletePost = async (req, res, next) => {
         const oldFilePath = path.join(__dirname, "..", postImg);
         if (fs.existsSync(oldFilePath)) {
           fs.unlinkSync(oldFilePath);
-          console.log("✅ Image deleted");
         }
       });
     }
@@ -167,7 +168,6 @@ exports.addLikePost = async (req, res) => {
   try {
     const postId = req.params.postId;
     const userId = req.user.id;
-    console.log("👤 User liking:", userId);
     const post = await Post.findById(postId);
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
@@ -302,8 +302,6 @@ exports.deleteCommentFromPost = async (req, res, next) => {
     post.commentsCount = post.comments.length;
 
     await post.save();
-
-    console.log("✅ COMMENT DELETED:", commentId);
 
     res.json({
       message: "Comment deleted successfully",
