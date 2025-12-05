@@ -26,19 +26,35 @@ const Photo = () => {
     ? state.posts.filter((post) => post.authorId === userId)
     : [];
 
-  const recentPhoto = recentPosts.flatMap((post) => {
-    if (!post.postImages || post.postImages.length === 0) return [];
+  const recentMedia = recentPosts.flatMap((post) => {
+    const media = [];
 
-    return post.postImages.map((imgUrl) => ({
-      imgUrl,
-      postId: post.id,
-      likes: post.likes,
-    }));
+    if (post.postImages && post.postImages.length > 0) {
+      post.postImages.forEach((imgUrl) => {
+        media.push({
+          url: imgUrl,
+          type: "image",
+          postId: post.id,
+          likes: post.likes,
+        });
+      });
+    }
+
+    if (post.video) {
+      media.push({
+        url: post.video,
+        type: "video",
+        postId: post.id,
+        likes: post.likes,
+      });
+    }
+
+    return media;
   });
 
-  const photosCount = recentPhoto.length;
+  const photosCount = recentMedia.filter((m) => m.type === "image").length;
   const albumCount = albums.length;
-  const videoCount = 0;
+  const videoCount = recentMedia.filter((m) => m.type === "video").length;
 
   return (
     <main className="flex-grow p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-800">
@@ -48,10 +64,10 @@ const Photo = () => {
             <FaImages className="text-2xl text-blue-500" />
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Photos & Albums
+                Media & Albums
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
-                Your memories and collections
+                Your photos, videos, and collections
               </p>
             </div>
           </div>
@@ -144,37 +160,62 @@ const Photo = () => {
 
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-            Recent Photos
+            Recent Media
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-            {recentPhoto.length === 0 ? (
+            {recentMedia.length === 0 ? (
               <p className="text-gray-500 dark:text-gray-400 col-span-full">
-                No recent photos.
+                No recent media.
               </p>
             ) : (
-              recentPhoto.map((photo, index) => (
+              recentMedia.map((media, index) => (
                 <div
                   key={index}
                   className="relative flex group cursor-pointer"
                   onClick={() => {
-                    setSelectedPostId(photo.postId);
+                    setSelectedPostId(media.postId);
                     setIsModalOpen(true);
                   }}
                 >
-                  <img
-                    loading="lazy"
-                    src={photo.imgUrl}
-                    alt={`Photo ${index}`}
-                    className="w-full h-32 object-cover rounded-lg bg-gray-100"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src =
-                        "https://via.placeholder.com/150?text=Error";
-                    }}
-                  />
-                  <div className="absolute inset-0 z-[-1] bg-black bg-opacity-0 group-hover:bg-opacity-40 rounded-lg transition-all flex items-center justify-center">
+                  {media.type === "video" ? (
+                    <div className="relative w-full h-32 bg-black rounded-lg overflow-hidden">
+                      <video
+                        src={media.url}
+                        className="w-full h-full object-cover opacity-80"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="bg-white/30 rounded-full p-2 backdrop-blur-sm">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            className="w-6 h-6 text-white"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <img
+                      loading="lazy"
+                      src={media.url}
+                      alt={`Media ${index}`}
+                      className="w-full h-32 object-cover rounded-lg bg-gray-100"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src =
+                          "https://via.placeholder.com/150?text=Error";
+                      }}
+                    />
+                  )}
+                  <div className="absolute inset-0 z-10 bg-black bg-opacity-0 group-hover:bg-opacity-40 rounded-lg transition-all flex items-center justify-center pointer-events-none">
                     <div className="opacity-0 group-hover:opacity-100 text-white flex items-center gap-1 text-lg font-semibold">
-                      <span>❤️</span> {photo.likes}
+                      <span>❤️</span> {media.likes}
                     </div>
                   </div>
                 </div>

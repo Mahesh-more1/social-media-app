@@ -293,7 +293,7 @@ function Post({ post, hideAddToAlbum = false, onDelete }) {
               loading="lazy"
               src={post.postImages[currentImgIndex]}
               alt=""
-              className="rounded-lg w-full h-96 object-contain"
+              className="rounded-lg w-full max-h-[600px] object-contain bg-black/5"
             />
 
             {currentImgIndex > 0 && (
@@ -325,7 +325,7 @@ function Post({ post, hideAddToAlbum = false, onDelete }) {
             loading="lazy"
             src={post.postImages[0]}
             alt=""
-            className="rounded-lg w-full h-96 object-contain"
+            className="rounded-lg w-full max-h-[600px] object-contain bg-black/5"
           />
         )}
 
