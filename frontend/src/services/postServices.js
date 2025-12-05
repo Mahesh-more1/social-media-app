@@ -157,7 +157,7 @@ export const toggleLikeCommentPost = async (
 
 export const mapServerItemToLocalItem = (serverItem) => {
   const mapImageUrl = (url) => {
-    if (typeof url !== "string") return "";
+    if (typeof url !== "string" || !url.trim()) return "";
 
     const doubleUrl = `${API_URL}${API_URL}`;
     if (url.startsWith(doubleUrl)) {
