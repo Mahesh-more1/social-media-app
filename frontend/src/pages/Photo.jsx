@@ -178,7 +178,7 @@ const Photo = () => {
                   }}
                 >
                   {media.type === "video" ? (
-                    <div className="relative w-full h-32 bg-black rounded-lg overflow-hidden">
+                    <div className="relative w-full h-32 rounded-lg overflow-hidden">
                       <video
                         src={media.url}
                         className="w-full h-full object-cover opacity-80"
@@ -213,7 +213,7 @@ const Photo = () => {
                       }}
                     />
                   )}
-                  <div className="absolute inset-0 z-10 bg-black bg-opacity-0 group-hover:bg-opacity-40 rounded-lg transition-all flex items-center justify-center pointer-events-none">
+                  <div className="absolute inset-0 z-[-10] bg-black bg-opacity-0 group-hover:bg-opacity-40 rounded-lg transition-all flex items-center justify-center pointer-events-none">
                     <div className="opacity-0 group-hover:opacity-100 text-white flex items-center gap-1 text-lg font-semibold">
                       <span>❤️</span> {media.likes}
                     </div>
